@@ -1,0 +1,63 @@
+# --- Python build/runtime artifacts ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.spec
+.build/
+build/
+dist/
+.eggs/
+*.egg-info/
+.venv/
+venv/
+ENV/
+.env
+*.env
+
+# --- PyInstaller output ---
+DeDuplication_Report_Similarity.exe
+Report_similarity_matrix.exe
+
+# --- PowerShell PS2EXE output ---
+ReportExportTool.exe
+
+# --- Logs & temp ---
+*.log
+*.tmp
+~$*
+
+# --- Editors / IDE ---
+.vscode/
+.idea/
+
+# --- System files ---
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# --- Excel / generated similarity outputs ---
+Report_similarity_matrix.xlsx
+
+# --- Downloaded binary report files (optional ignore) ---
+# Uncomment if you do NOT want PBIX binaries in repo
+# download_pbix_files/*.pbix
+
+# --- Converted PBIP project caches (adjust as needed) ---
+# Keep PBIP project source; ignore transient cache folders if present
+converted_pbip_files/*/Cache/
+converted_pbip_files/*/.lock
+
+# --- Optional: local configuration overrides ---
+*.local.json
+
+# --- Node (if ever used for tooling) ---
+node_modules/
+
+# --- Archive files ---
+*.zip
+*.7z
+*.tar
+*.gz
+
+# End of .gitignore
