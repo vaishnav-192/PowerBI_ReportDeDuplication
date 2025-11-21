@@ -15,6 +15,9 @@ Build to .exe (optional):
 [CmdletBinding()]
 param()
 
+# Set execution policy for this session to allow script execution
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+
 function Read-NonEmpty([string]$prompt) {
   while ($true) {
     $val = Read-Host $prompt
@@ -68,12 +71,22 @@ try {
   $ans = Read-Host "Proceed? (Y/N)"
   if ($ans -match '^(y|yes)$') {
     # Validate and import conversion module
-  $modulePath = Join-Path -Path $ScriptRoot -ChildPath "PBIXtoPBIP_PBITConversion.psm1"
+    $modulePath = Join-Path -Path $ScriptRoot -ChildPath "PBIXtoPBIP_PBITConversion.psm1"
     if (-not (Test-Path $modulePath)) { throw "Cannot find PBIXtoPBIP_PBITConversion.psm1 next to this script." }
-    Import-Module $modulePath -Force
-    Get-Module PBIXtoPBIP_PBITConversion | Out-Host
+    
+    Write-Host "Importing PBIXtoPBIP_PBITConversion module..." -ForegroundColor Cyan
+    Import-Module $modulePath -Force -ErrorAction Stop
+    
+    # Verify module is loaded
+    $loadedModule = Get-Module PBIXtoPBIP_PBITConversion
+    if ($loadedModule) {
+      Write-Host "✓ Module loaded successfully: $($loadedModule.Name) v$($loadedModule.Version)" -ForegroundColor Green
+      Write-Host "  Exported functions: $($loadedModule.ExportedFunctions.Keys -join ', ')" -ForegroundColor Gray
+    } else {
+      throw "Module failed to load properly"
+    }
 
-  $files = Get-ChildItem -LiteralPath $pbixFolder -Filter *.pbix -File | Sort-Object Name
+    $files = Get-ChildItem -LiteralPath $pbixFolder -Filter *.pbix -File | Sort-Object Name
     if (-not $files) {
       Write-Host "No PBIX files found to convert in $pbixFolder" -ForegroundColor Yellow
     } else {

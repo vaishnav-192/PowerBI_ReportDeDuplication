@@ -1,6 +1,6 @@
 <#     
 
-    Import-Module "<<PBIXtoPBIP_PBITConversion.psm1 File Path>>\PBIXtoPBIP_PBITConversion.psm1" -Force
+    Import-Module "<<PathToModule>>\PBIXtoPBIP_PBITConversion.psm1" -Force
     Get-Module PBIXtoPBIP_PBITConversion
     PBIXtoPBIP_PBITConversion
 
