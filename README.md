@@ -17,15 +17,21 @@ DeDuplication_Report_Similarity.py   # Python similarity & deduplication logic
 export_reports.ps1                   # Script to export PBIX reports
 PBIXtoPBIP_PBITConversion.psm1       # PowerShell module for PBIX→PBIP conversion (UI automation)
 run_exporter_console.ps1             # Interactive console wrapper (export & optional conversion)
+setup_dependencies.ps1               # One-time setup script to install all required PowerShell modules
 converted_pbip_files/                # Generated PBIP project folders
 download_pbix_files/                 # Exported PBIX files
+requirements.txt                     # Python package requirements
 ```
 
 ## 3. Prerequisites
 ### PowerShell
 - Windows PowerShell 5.1 (default) or newer
 - Sufficient permissions to access the target Power BI workspace (Viewer or higher)
-- Optional: Install `PS2EXE` if building the exporter into an `.exe`
+- PowerShell Modules (auto-installed by setup script):
+  - NuGet package provider (v2.8.5.201+)
+  - PSGallery repository (trusted)
+  - MicrosoftPowerBIMgmt (with sub-modules)
+  - PS2EXE (optional, for building .exe)
 
 ### Power BI Desktop
 - Installed locally (required for PBIX → PBIP UI automation conversion)
@@ -40,13 +46,26 @@ pip install -r requirements.txt
 ```
 (If you do not use the `requirements.txt`, run: `pip install pandas openpyxl`)
 
-## 4. Step 1: Import the Conversion Module
-Before running conversion logic independently, import the module:
+## 4. Step 1: Install Required PowerShell Modules
+**IMPORTANT: Run this first before using any export or conversion scripts.**
+
+The repository includes `setup_dependencies.ps1` which automatically installs all required PowerShell modules and configures your environment.
+
+Run the setup script:
 ```powershell
-Import-Module "<FullPathToModuleFolder>\PBIXtoPBIP_PBITConversion.psm1" -Force
-Get-Module PBIXtoPBIP_PBITConversion
+# From repository root
+.\setup_dependencies.ps1
 ```
-Replace `<FullPathToModuleFolder>` with the absolute path containing the module.
+
+This script will:
+- Set execution policy for the current session
+- Install NuGet package provider
+- Configure PSGallery as a trusted repository
+- Install MicrosoftPowerBIMgmt and related modules (with AcceptLicense)
+- Optionally install PS2EXE for building executables
+- Verify all installations
+
+**Note:** You only need to run this once per machine, unless modules need updating.
 
 ## 5. Step 2: Export PBIX Reports (Optional Immediate Conversion)
 Use the console wrapper script to:
@@ -57,13 +76,15 @@ Use the console wrapper script to:
 Run:
 ```powershell
 # From repository root
-./run_exporter_console.ps1
+.\run_exporter_console.ps1
 ```
 Follow on-screen prompts.
 
 ### Behind the Scenes
-- `export_reports.ps1` handles downloading PBIX via Power BI REST/API calls (requires proper authentication context).
-- If conversion selected, the module `PBIXtoPBIP_PBITConversion.psm1` automates Power BI Desktop to produce PBIP projects.
+- The script automatically sets execution policy for the current session
+- `export_reports.ps1` handles downloading PBIX via Power BI REST/API calls (requires proper authentication context)
+- Power BI modules are automatically imported if already installed (run `setup_dependencies.ps1` first if not)
+- If conversion selected, the module `PBIXtoPBIP_PBITConversion.psm1` is imported and automates Power BI Desktop to produce PBIP projects
 
 ## 6. (Optional) Build PowerShell Exporter as .EXE
 Install PS2EXE once per environment:
@@ -119,21 +140,25 @@ Generated binary appears under `dist/DeDuplication_Report_Similarity.exe`.
 Distribute along with instructions for providing proper folder paths.
 
 ## 9. Recommended Workflow
-1. Run `run_exporter_console.ps1` → export PBIXs.
-2. Choose conversion → produce PBIP folders in `converted_pbip_files`.
-3. Review converted structure; ensure all report folders end with `.Report` (or consistent naming).
-4. Set `REPORTS_ROOT` to `converted_pbip_files` absolute path.
-5. Choose/prepare an output folder and set `OUTPUT_PATH`.
-6. Run similarity script.
-7. Open Excel matrix → identify high-similarity pairs/groups.
-8. Use console output lists of masters vs. eliminations to decide archival/deletion.
+1. **First-time setup**: Run `.\setup_dependencies.ps1` to install all required PowerShell modules.
+2. Run `.\run_exporter_console.ps1` → export PBIXs.
+3. Choose conversion → produce PBIP folders in `converted_pbip_files`.
+4. Review converted structure; ensure all report folders end with `.Report` (or consistent naming).
+5. Set `REPORTS_ROOT` to `converted_pbip_files` absolute path.
+6. Choose/prepare an output folder and set `OUTPUT_PATH`.
+7. Run similarity script: `python .\DeDuplication_Report_Similarity.py`
+8. Open Excel matrix → identify high-similarity pairs/groups.
+9. Use console output lists of masters vs. eliminations to decide archival/deletion.
 
 ## 10. Troubleshooting
-- Excel not generated: Verify `OUTPUT_PATH` exists and you have write permissions.
-- Missing PBIP folders: Ensure Power BI Desktop was installed and UI automation not blocked (no modal dialogs).
-- Similarity all zeros: Check that PBIP folders contain JSON visual definitions; conversion may have failed.
-- Import-Module fails: Confirm full absolute path and file is not blocked (Unblock-File if downloaded).
-- Pandas Excel write error: Install `openpyxl` (`pip install openpyxl`).
+- **Module installation fails**: Run `setup_dependencies.ps1` with administrator privileges if needed, or check internet connectivity for downloading from PSGallery.
+- **Execution policy errors**: The scripts set execution policy to Bypass for the current session automatically. If issues persist, run: `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force`
+- **Power BI authentication fails**: Ensure you have appropriate permissions in the target workspace and valid credentials.
+- **Excel not generated**: Verify `OUTPUT_PATH` exists and you have write permissions.
+- **Missing PBIP folders**: Ensure Power BI Desktop was installed and UI automation not blocked (no modal dialogs).
+- **Similarity all zeros**: Check that PBIP folders contain JSON visual definitions; conversion may have failed.
+- **Import-Module fails**: Confirm full absolute path and file is not blocked (Unblock-File if downloaded).
+- **Pandas Excel write error**: Install `openpyxl` (`pip install openpyxl`).
 
 ## 11. Security & Access Notes
 - Workspace export requires appropriate Power BI service permissions.
@@ -145,9 +170,16 @@ Distribute along with instructions for providing proper folder paths.
 - Archive original PBIX files after successful PBIP conversion to reduce redundancy.
 
 ## 13. Requirements Summary
-PowerShell Modules:
-- `PBIXtoPBIP_PBITConversion.psm1` (local)
-- `PS2EXE` (optional)
+PowerShell Modules (installed via `setup_dependencies.ps1`):
+- NuGet package provider (v2.8.5.201+)
+- MicrosoftPowerBIMgmt (with AcceptLicense)
+- MicrosoftPowerBIMgmt.Reports
+- MicrosoftPowerBIMgmt.Workspaces
+- MicrosoftPowerBIMgmt.Profile
+- PS2EXE (optional, for building executables)
+
+Local PowerShell Modules:
+- `PBIXtoPBIP_PBITConversion.psm1` (included in repository)
 
 Python Packages:
 - `pandas`
